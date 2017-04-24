@@ -1,0 +1,165 @@
+%YAML 1.2
+---
+name: STF
+file_extensions:
+  - stf
+first_line_match: '^# STF 1.0'
+scope: text.stf
+variables:
+  simple_name: '[A-Za-z_][A-Za-z0-9_]*'
+  complex_name: '\{[^\}]+\}'
+  float: '(?:[\+\-]?[1-9]+[0-9]*|0)(?i:(?:\.\d+(?:e[\-\+]?\d+)?))'
+  int: '(?:[\+\-]?[1-9]+[0-9]*|0)'
+contexts:
+  main:
+    - include: comments
+    - include: double-quoted-string
+    - match: '(\s*)'
+    - match: '(\[)/'
+      captures:
+        1: punctuation.definition.tag.begin.stf
+      set: close-tag-name
+    - match: '\['
+      scope: punctuation.definition.tag.begin.stf
+      set: open-tag-name
+    - match: '(.*)'
+      scope: invalid.illegal
+  open-tag-name:
+    - match: '(?:[\s]*)([^A-Za-z_\{}]*)({{simple_name}})([^/\]\s]*)'
+      captures:
+        1: invalid.illegal
+        2: entity.name.tag.stf
+        3: invalid.illegal
+      set: tag-stuff
+    - match: '(?:[\s]*)([^A-Za-z_\{}]*)(\{)'
+      captures:
+        1: invalid.illegal
+        2: entity.name.tag.stf
+      set: complex-tag-name
+    - match: '(?:[\s]*)([^A-Za-z_\{}]*/?)\]'
+      captures:
+        1: invalid.illegal
+      set: main
+  close-tag-name:
+    - match: '(?:[\s]*)([^A-Za-z_\{]*)({{simple_name}})([^/\]\s]*)'
+      captures:
+        1: invalid.illegal
+        2: entity.name.tag.stf
+        3: invalid.illegal
+      set:
+        - match: '([^\s]*)(\])'
+          captures:
+            1: invalid.illegal
+            2: punctuation.definition.tag.begin
+          set: main
+    - match: '(?:[\s]*)([^A-Za-z_\{}]*)(\{)'
+      captures:
+        1: invalid.illegal
+        2: entity.name.tag.stf
+      set: close-tag-complex-name
+  tag-stuff:
+    - match: '(?:\s+|^)([^\s\{A-Za-z_/\]]*)({{simple_name}})([^=\s]*)(=)'
+      captures:
+        1: invalid.illegal
+        2: entity.other.attribute-name.stf
+        3: invalid.illegal
+        4: punctuation
+      set: attr-val
+    - match: '(?:\s+|^)([^\s\{A-Za-z_/\]]*)(\{)'
+      captures:
+        1: invalid.illegal
+        2: entity.other.attribute-name.stf
+      set: attr-complex-name
+    - match: '/?\]'
+      scope: punctuation.definition.tag.end.stf
+      set: main
+  attr-complex-name:
+    - include: double-quoted-string
+    - match: '(\})([^=\s]*)(=)'
+      captures:
+        1: entity.other.attribute-name.stf
+        2: invalid.illegal
+        3: punctuation
+      set: attr-val
+  attr-val:
+    - match: '\s*'
+    - match: '"'
+      scope: punctuation.definition.string.begin.stf
+      set:
+        - meta_scope: string.quoted.double.stf
+        - match: '"'
+          scope: punctuation.definition.string.end.stf
+          set: tag-stuff
+        - include: esc
+
+    - match: 'true|false'
+      scope: support.function.builtin
+      set: tag-stuff
+    - match: '(timestamp)\(({{int}})\)'
+      captures:
+        1: support.function.builtin
+        2: constant.numeric.integer
+      set: tag-stuff
+    - match: '(int2)\(({{int}}),\s*({{int}})\)'
+      captures:
+        1: support.function.builtin
+        2: constant.numeric.integer
+        3: constant.numeric.integer
+      set: tag-stuff
+    - match: '(float2)\(({{float}}),\s*({{float}})\)'
+      captures:
+        1: support.function.builtin
+        2: constant.numeric
+        3: constant.numeric
+      set: tag-stuff
+    - match: '{{float}}'
+      scope: constant.numeric.float.python
+      set: tag-stuff
+    - match: '{{int}}'
+      scope: constant.numeric.integer
+      set: tag-stuff
+    - match: '/?\]'
+      scope: punctuation.definition.tag.end.stf
+      set: main
+    - match: '[^\s/\]]*'
+      scope: invalid.illegal
+      set: tag-stuff
+  complex-tag-name:
+    - include: double-quoted-string
+    - match: '\}'
+      scope: entity.name.tag.stf
+      set: tag-stuff
+  close-tag-complex-name:
+    - include: double-quoted-string
+    - match: '(?:\s*)([^\s]*)(\})(?:\s*)([^\s]*)(\])'
+      captures:
+        1: invalid.illegal
+        2: entity.name.tag.stf
+        3: invalid.illegal
+        4: punctuation.definition.tag.end
+      set: main
+  double-quoted-string:
+    - match: '"'
+      scope: punctuation.definition.string.begin.stf
+      push:
+        - meta_scope: string.quoted.double.stf
+        - match: '"'
+          scope: punctuation.definition.string.end.stf
+          pop: true
+        - include: esc
+  esc:
+    - match: '\\([nrt0"\\]|x[0-9A-Za-z][0-9A-Za-z])'
+      scope: constant.character
+  comments:
+    - match: "#"
+      scope: punctuation.definition.comment
+      push:
+        - meta_scope: comment.line
+        - match: \n
+          pop: true
+#    - match: "//"
+#      scope: punctuation.definition.comment
+#      push:
+#        - meta_scope: comment.line
+#        - match: \n
+#          pop: true

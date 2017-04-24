@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plist version="1.0">
+<dict>
+	<key>fileTypes</key>
+	<array>
+		<string>stf</string>
+	</array>
+	<key>name</key>
+	<string>STF</string>
+	<key>patterns</key>
+	<array>
+	</array>
+	<key>scopeName</key>
+	<string>text.stf</string>
+</dict>
+</plist>

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plist version="1.0">
+<dict>
+	<key>name</key>
+	<string>Miscellaneous</string>
+	<key>scope</key>
+	<string>text.stf</string>
+	<key>settings</key>
+	<dict>
+		<key>comment</key>
+		<string>
+		/*
+		 * Don't indent:
+		 *  [whatever][/whatever]
+		 *  [whatever /]
+		 *
+		 * Do indent:
+		 *  [whatever]
+		 *  [%
+		 *  [!--
+		 *  [%--
+		 *
+		 * Decrease indent for:
+		 *  [/whatever]
+		 */
+		</string>
+		<key>decreaseIndentPattern</key>
+		<string>^\s*\[/[^\]]+\]</string>
+		<key>highlightPairs</key>
+		<array>
+			<array>
+				<string>(</string>
+				<string>)</string>
+			</array>
+			<array>
+				<string>[</string>
+				<string>]</string>
+			</array>
+			<array>
+				<string>{</string>
+				<string>}</string>
+			</array>
+			<array>
+				<string>"</string>
+				<string>"</string>
+			</array>
+		</array>
+		<key>increaseIndentPattern</key>
+		<string>^\s*\[([^/](?!.+?([/%]\]|\[/.+?\])))</string>
+	</dict>
+</dict>
+</plist>
